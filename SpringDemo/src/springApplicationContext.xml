@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!--
+		Here we removed the DOCTYPE from the xml and added all the namespaces
+		in <beans/> by copying from file 'annotation-config.xml' (which was
+		inside the project folder in spring release folder.). Without this the
+		@Qualifier annotation and its mapping in xml won't work also some other
+		features like <context:annotation-config/>.
+	-->
+	<!--
+		we have default default-init-method="myInit"
+		default-destroy-method="myCleanUp" in this case if we have these
+		method in our bean they will be called for each bean after bean
+		initialisation and before destruction respectively.
+	-->
+	<!-- 
+		NOTE : In case our bean is also implementing the default the interfaces 
+		provided by spring -InitializingBean, DisposableBean for the same purpose 
+		then their method will take priority over myInit and myCleanUp method and 
+		will get executed first...but eventually all method will be executed. Also 
+		the destroy method will be executed in case id bean scope is singleton. 
+	-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	xmlns:context="http://www.springframework.org/schema/context"
+	default-init-method="myInit" default-destroy-method="myCleanUp">
+	<!--
+		The default bean scope is singleton which let spring provide the same
+		object over and over again every time we call getBean(). We have to
+		change the scope to the prototype through which we will receive a new
+		object each time. In case of singleton the bean is being is
+		initialised when we initialise application context where in case of
+		prototype its initialise when we call getBean().
+	-->
+	<bean id="line" class="com.testspring.drawshapes.beans.Line" name="line-name"
+		scope="prototype">
+		<!--
+			The ref tag can point to either the id or the name or the alias
+		-->
+		<property name="pointA" ref="zeroPoint" />
+		<!--
+			To make ref to an id only ,one should use id-ref. but id-ref tag here
+			it won't work because :
+		-->
+		<!--
+			NOTE : The <idref> tag is used to create a String-typed value equal
+			to the ID of the referred bean and is intended for validation
+			purposes. The idref element allow you to pass the bean id (which is
+			the string value not the reference) of another bean in the container
+			to a <property/> or <constructor-arg/>
+		-->
+		<!--
+			<property name="pointA"> <idref bean="zeroPoint" /> </property>
+		-->
+
+		<property name="pointB">
+			<!-- Inner Bean for point B (id is not required for inner bean) -->
+			<bean class="com.testspring.drawshapes.beans.Point">
+				<property name="xCoordinate" value="-20" />
+				<property name="yCoordinate" value="0" />
+			</bean>
+		</property>
+	</bean>
+
+	<alias name="line" alias="line-alias" />
+
+	<bean id="triangleParent" class="com.testspring.drawshapes.beans.Triangle"
+		abstract="true">
+		<property name="points">
+			<list>
+				<ref bean="zeroPoint" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="triangle" class="com.testspring.drawshapes.beans.Triangle"
+		name="triangle-name" parent="triangleParent" scope="prototype">
+		<property name="points">
+			<!--
+				Use merge="true" otherwise list of parent will get overridden by
+				child
+			-->
+			<list merge="true">
+				<ref bean="pointB" />
+				<ref bean="pointC" />
+			</list>
+		</property>
+	</bean>
+
+	<!--
+		Here init-method will call the myInit method inside the bean after the
+		bean is initialised. The destroy-method tag will call the myCleanUp
+		method for the circle bean before bean destruction. NOTE : Here in our
+		case the destroy method will not be called since we have declared the
+		bean scope as prototype. we have to set the bean scope as default
+		singleton.
+	-->
+	<bean id="circle" class="com.testspring.drawshapes.beans.Circle" name="circle-name"
+		scope="prototype" init-method="myInit" destroy-method="myCleanUp">
+		<property name="radius" value="5" />
+	</bean>
+
+	<bean id="zeroPoint" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="0" />
+		<property name="yCoordinate" value="0" />
+	</bean>
+
+	<bean id="pointB" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="20" />
+		<property name="yCoordinate" value="0" />
+	</bean>
+
+	<bean id="pointC" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="20" />
+		<property name="yCoordinate" value="20" />
+	</bean>
+
+	<bean id="pointD" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="0" />
+		<property name="yCoordinate" value="20" />
+	</bean>
+
+	<bean id="center" class="com.testspring.drawshapes.beans.Point">
+		<qualifier value="circleSpecific" />
+		<property name="xCoordinate" value="${zeroPoint.pointX}" />
+		<property name="yCoordinate" value="${zeroPoint.pointY}" />
+	</bean>
+
+	<!--
+		We are here declaring a bean which implements BeanPostProcessor. which
+		will be called automatically when all the bean get initialised inside
+		this xml. We do not need id for post processor bean.
+	-->
+	<bean class="com.testspring.drawshapes.postprocessers.DisplayNameBeanPostProcessor" />
+
+	<bean class="com.testspring.drawshapes.postprocessers.MyBeanFactoryPostProcessor" />
+
+	<!--
+		If RequiredAnnotationBeanPostProcessor is used then it will gives an exception
+		initialisation process itself when the application factory is
+		initialised if any 'required' property is missing in any bean'. It help
+		us to avoid any null point exception at runtime which may occur in
+		case of any mandatory property is not assigned in a bean. for this to
+		be effective we have to put @Required annotation on the setter of that
+		property.
+	-->
+	<!--
+		<bean
+		class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"
+		/>
+	-->
+	<!--
+		AutowiredAnnotationBeanPostProcessor is required for Autowiring using
+		annotations.
+	-->
+	<!--
+		<bean
+		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"
+		/>
+	-->
+	<!--
+		We have commented all above AnnotationBeanPostProcessor and in place
+		of the we have added below <context:annotation-config/>. Which will do
+		the same as adding the all AnnotationBeanPostProcessor
+	-->
+	<context:annotation-config />
+	
+	<context:component-scan base-package="com.testspring.drawshapes.listeners" />
+
+	<!--
+		PropertyPlaceholderConfigurer helps us to define the place holders for
+		the properties, which values we have defined in the property file
+	-->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" value="pointsconfig.properties" />
+	</bean>
+
+	<!-- To Configure some external message properties file. -->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>mymessages</value>
+			</list>
+		</property>
+	</bean>
+
+</beans>

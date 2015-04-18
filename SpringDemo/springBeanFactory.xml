@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+
+<beans>
+	<bean id="rectangle" class="com.testspring.drawshapes.beans.Rectangle">
+
+		<!--  property initialisation-->
+		<property name="drawnBy" value="Spring" />
+
+		<!--  constructor injection-->
+		<constructor-arg type="int" index="0" value="10" />
+		<constructor-arg type="int" index="1" value="20" />
+
+	</bean>
+</beans>

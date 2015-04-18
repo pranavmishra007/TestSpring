@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	xmlns:context="http://www.springframework.org/schema/context">
+
+	<bean id="quadrilateralParent" class="com.testspring.drawshapes.beans.Quadrilateral"
+		abstract="true">
+		<property name="point1" ref="origin" />
+	</bean>
+
+	<!--
+		autowire tag will bind the property declared in the Circle class with
+		the bean present in xml file on basis of name or type or constructor
+		etc. Here we have declared autowire="byName" therefore the centre
+		point will be auto wired because the same name property is defined in
+		Circle class.
+	-->
+	<bean id="quadrilateral" class="com.testspring.drawshapes.beans.Quadrilateral"
+		name="quadrilateral-name" parent="quadrilateralParent" scope="prototype"
+		autowire="byName">
+	</bean>
+
+	<bean id="origin" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="0" />
+		<property name="yCoordinate" value="0" />
+	</bean>
+
+	<bean id="point2" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="20" />
+		<property name="yCoordinate" value="0" />
+	</bean>
+
+	<bean id="point3" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="20" />
+		<property name="yCoordinate" value="20" />
+	</bean>
+
+	<bean id="point4" class="com.testspring.drawshapes.beans.Point">
+		<property name="xCoordinate" value="0" />
+		<property name="yCoordinate" value="20" />
+	</bean>
+
+	<context:annotation-config />
+
+	<!--
+		We have to tell spring that we have bean inside our code using
+		@Component annotation.
+	-->
+	<context:component-scan base-package="com.testspring.drawshapes.beans" />
+	
+	<context:component-scan base-package="com.testspring.drawshapes.listeners" />
+	
+	<!-- To Configure some external message properties file. -->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>mymessages</value>
+			</list>
+		</property>
+	</bean>
+
+</beans>
